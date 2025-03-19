@@ -5,16 +5,19 @@ WORKDIR /app
 # Copy package files first for better layer caching
 COPY package*.json ./
 
-# Install dependencies
-RUN npm install
+# Install dependencies including wait-on for checking database availability
+RUN npm install && npm install wait-on --save-dev
 
 # Copy the rest of the application
 COPY . .
 
-# Generate Prisma client and build TypeScript
+# Make the entrypoint script executable
+RUN chmod +x ./docker-entrypoint.sh
+
+# Generate Prisma client
 RUN npx prisma generate && npm run build
 
 EXPOSE 3000
 
-# Run from the compiled JavaScript in the dist folder
-CMD ["npm", "start"] 
+# Use the entrypoint script to ensure migrations run before the server starts
+ENTRYPOINT ["./docker-entrypoint.sh"] 
