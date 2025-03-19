@@ -1,0 +1,134 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  INSTRUCTOR
+  STUDENT
+}
+
+model User {
+  id            String       @id @default(uuid())
+  email         String       @unique
+  password      String      
+  name          String
+  role          UserRole     @default(STUDENT)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  profileImage  String?
+  enrollments   Enrollment[]
+  coursesTaught Course[]     // For instructors
+  quizzes       Quiz[]       // For instructors who create quizzes
+  quizResults   QuizResult[] // For students
+  videoProgress VideoProgress[]
+}
+
+model Course {
+  id           String      @id @default(uuid())
+  title        String
+  description  String
+  price        Float       @default(0)
+  published    Boolean     @default(false)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  instructorId String
+  instructor   User        @relation(fields: [instructorId], references: [id])
+  enrollments  Enrollment[]
+  videos       Video[]
+  quizzes      Quiz[]
+}
+
+model Enrollment {
+  id         String   @id @default(uuid())
+  userId     String
+  courseId   String
+  enrolledAt DateTime @default(now())
+  paid       Boolean  @default(false)
+  user       User     @relation(fields: [userId], references: [id])
+  course     Course   @relation(fields: [courseId], references: [id])
+  
+  @@unique([userId, courseId])
+}
+
+model Video {
+  id            String          @id @default(uuid())
+  title         String
+  description   String
+  url           String
+  duration      Int             // in seconds
+  order         Int             // To maintain sequence in a course
+  courseId      String
+  course        Course          @relation(fields: [courseId], references: [id])
+  videoProgress VideoProgress[]
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+}
+
+model VideoProgress {
+  id            String   @id @default(uuid())
+  userId        String
+  videoId       String
+  watchedSeconds Int     @default(0)
+  completed     Boolean  @default(false)
+  lastWatched   DateTime @default(now())
+  user          User     @relation(fields: [userId], references: [id])
+  video         Video    @relation(fields: [videoId], references: [id])
+  
+  @@unique([userId, videoId])
+}
+
+model Quiz {
+  id         String       @id @default(uuid())
+  title      String
+  courseId   String
+  course     Course       @relation(fields: [courseId], references: [id])
+  creatorId  String
+  creator    User         @relation(fields: [creatorId], references: [id])
+  questions  Question[]
+  quizResults QuizResult[]
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+}
+
+model Question {
+  id          String   @id @default(uuid())
+  text        String
+  quizId      String
+  quiz        Quiz     @relation(fields: [quizId], references: [id])
+  options     Option[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Option {
+  id          String   @id @default(uuid())
+  text        String
+  isCorrect   Boolean  @default(false)
+  questionId  String
+  question    Question @relation(fields: [questionId], references: [id])
+}
+
+model QuizResult {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  quizId      String
+  quiz        Quiz     @relation(fields: [quizId], references: [id])
+  score       Float    // Percentage score
+  answers     Json     // Store answers as JSON {questionId: selectedOptionId}
+  submittedAt DateTime @default(now())
+  
+  @@unique([userId, quizId])
+}
