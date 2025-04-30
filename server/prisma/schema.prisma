@@ -14,7 +14,6 @@ datasource db {
 }
 
 enum UserRole {
-  ADMIN
   INSTRUCTOR
   STUDENT
 }
@@ -24,15 +23,13 @@ model User {
   email         String       @unique
   password      String      
   name          String
-  role          UserRole     @default(STUDENT)
+  role          UserRole
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
-  profileImage  String?
-  enrollments   Enrollment[]
+  enrollments   Enrollment[] // students
   coursesTaught Course[]     // For instructors
-  quizzes       Quiz[]       // For instructors who create quizzes
+  quizzesCreated Quiz[]      // For instructors who create quizzes
   quizResults   QuizResult[] // For students
-  videoProgress VideoProgress[]
 }
 
 model Course {
@@ -66,32 +63,19 @@ model Video {
   id            String          @id @default(uuid())
   title         String
   description   String
-  url           String
-  duration      Int             // in seconds
+  url           String          // YouTube URL
   order         Int             // To maintain sequence in a course
   courseId      String
   course        Course          @relation(fields: [courseId], references: [id])
-  videoProgress VideoProgress[]
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
 }
 
-model VideoProgress {
-  id            String   @id @default(uuid())
-  userId        String
-  videoId       String
-  watchedSeconds Int     @default(0)
-  completed     Boolean  @default(false)
-  lastWatched   DateTime @default(now())
-  user          User     @relation(fields: [userId], references: [id])
-  video         Video    @relation(fields: [videoId], references: [id])
-  
-  @@unique([userId, videoId])
-}
 
 model Quiz {
   id         String       @id @default(uuid())
   title      String
+  order      Int          @default(0) // To maintain sequence in a course
   courseId   String
   course     Course       @relation(fields: [courseId], references: [id])
   creatorId  String

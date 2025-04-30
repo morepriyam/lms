@@ -3,7 +3,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
 import authRoutes from './routes/auth.routes';
-import userRoutes from './routes/user.routes';
+import courseRoutes from './routes/course.routes';
+import quizRoutes from './routes/quiz.routes';
 
 // Load environment variables
 dotenv.config();
@@ -25,7 +26,8 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
+app.use('/api/courses', courseRoutes);
+app.use('/api', quizRoutes);  // Quiz routes are mounted at /api root to support both course-specific and standalone endpoints
 
 // Health check route
 app.get('/api/health', (req, res) => {

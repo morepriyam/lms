@@ -18,10 +18,10 @@ const generateToken = (userId: string, email: string, role: UserRole): string =>
 // Register a new user
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { email, password, name }: RegisterBody = req.body;
+    const { email, password, name, role  }: RegisterBody = req.body;
 
     // Validate input
-    if (!email || !password || !name) {
+    if (!email || !password || !name || !role) {
       res.status(400).json({ message: 'Email, password, and name are required' });
       return;
     }
@@ -43,7 +43,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         email,
         password: hashedPassword,
         name,
-        role: UserRole.STUDENT
+        role
       }
     });
 

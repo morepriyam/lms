@@ -1,15 +1,15 @@
 import { Router } from 'express';
 import { register, login, getCurrentUser } from '../controllers/auth.controller';
 import { authenticate } from '../middlewares/auth.middleware';
+import { asHandler, asMiddleware } from '../types';
 
 const router = Router();
 
 // Public routes
-router.post('/register', register);
-router.post('/login', login);
+router.post('/register', asHandler(register));
+router.post('/login', asHandler(login));
 
 // Protected routes
-// @ts-ignore - Ignoring type checking for the middleware
-router.get('/me', authenticate, getCurrentUser);
+router.get('/me', asMiddleware(authenticate), asHandler(getCurrentUser));
 
 export default router; 

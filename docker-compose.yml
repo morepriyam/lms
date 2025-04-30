@@ -19,6 +19,17 @@ services:
       timeout: 5s
       retries: 5
 
+  # Migration service that runs and exits
+  migration:
+    build:
+      context: ./server
+    command: bash -c "npx prisma migrate deploy && npx prisma generate"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://lms_user:lms_password@postgres:5432/lms_db
+
   server:
     build:
       context: ./server
@@ -26,6 +37,8 @@ services:
     ports:
       - "3000:3000"
     depends_on:
+      migration:
+        condition: service_completed_successfully
       postgres:
         condition: service_healthy
     restart: unless-stopped
